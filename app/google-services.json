@@ -1,0 +1,77 @@
+{
+  "project_info": {
+    "project_number": "443264236944",
+    "firebase_url": "https://mychatapp-b3588-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "mychatapp-b3588",
+    "storage_bucket": "mychatapp-b3588.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:443264236944:android:0b4d760a27d065a9328715",
+        "android_client_info": {
+          "package_name": "com.airjob.chatappfinal_05_12"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "443264236944-8tpfclkqmnvm1up7hhjfsos1h9c4qg7m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDF_zN6-xdrTcOMjBtagmma0JsFXLYr79s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "443264236944-8tpfclkqmnvm1up7hhjfsos1h9c4qg7m.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:443264236944:android:93c9ebb5cd8a3983328715",
+        "android_client_info": {
+          "package_name": "com.airjob.mychatapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "443264236944-2f66f0cqf6tlnqmnqs8mnf46j7bid9b0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.airjob.mychatapp",
+            "certificate_hash": "e04574ebf9242f8baa93ad3fea5d75207ea584aa"
+          }
+        },
+        {
+          "client_id": "443264236944-8tpfclkqmnvm1up7hhjfsos1h9c4qg7m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDF_zN6-xdrTcOMjBtagmma0JsFXLYr79s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "443264236944-8tpfclkqmnvm1up7hhjfsos1h9c4qg7m.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
