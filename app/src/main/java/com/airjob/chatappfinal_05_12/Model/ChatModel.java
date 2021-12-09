@@ -1,19 +1,19 @@
 package com.airjob.chatappfinal_05_12.Model;
 
-public class Chat {
+public class ChatModel {
     private String sender;
     private String receiver;
     private String message;
     private boolean isseen;
 
-    public Chat(String sender, String receiver, String message, boolean isseen) {
+    public ChatModel(String sender, String receiver, String message, boolean isseen) {
         this.sender = sender;
         this.receiver = receiver;
         this.message = message;
         this.isseen = isseen;
     }
 
-    public Chat() {
+    public ChatModel() {
     }
 
     public String getSender() {

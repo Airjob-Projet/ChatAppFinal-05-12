@@ -12,8 +12,8 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.airjob.chatappfinal_05_12.Adapter.UserAdapter;
-import com.airjob.chatappfinal_05_12.Model.Chatlist;
-import com.airjob.chatappfinal_05_12.Model.User;
+import com.airjob.chatappfinal_05_12.Model.ChatlistModel;
+import com.airjob.chatappfinal_05_12.Model.UserModel;
 import com.airjob.chatappfinal_05_12.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -22,6 +22,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,12 +33,17 @@ public class ChatsFragment extends Fragment {
     private RecyclerView recyclerView;
 
     private UserAdapter userAdapter;
-    private List<User> mUsers;
+    private List<UserModel> mUsers;
 
     FirebaseUser fuser;
-    DatabaseReference reference;
+    DatabaseReference reference; // Avec RealTime
 
-    private List<Chatlist> usersList;
+    // Avec Firestore
+    FirebaseFirestore db;
+    private CollectionReference chatCollectionRef;
+
+
+    private List<ChatlistModel> usersList;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -51,13 +58,15 @@ public class ChatsFragment extends Fragment {
 
         usersList = new ArrayList<>();
 
+        // Récupération des données sur la base
+        // Avec RealTimeDatabase
         reference = FirebaseDatabase.getInstance().getReference("Chatlist").child(fuser.getUid());
         reference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 usersList.clear();
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()){
-                    Chatlist chatlist = snapshot.getValue(Chatlist.class);
+                    ChatlistModel chatlist = snapshot.getValue(ChatlistModel.class);
                     usersList.add(chatlist);
                 }
 
@@ -70,6 +79,23 @@ public class ChatsFragment extends Fragment {
             }
         });
 
+//        // Avec Firestore
+//        // Init de Firestore
+//        db = FirebaseFirestore.getInstance();
+//        chatCollectionRef = db.collection("Chatlist");
+//        chatCollectionRef
+//                .get()
+//                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+//                    @Override
+//                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+//                        if(task.isSuccessful()){
+//                            for (QueryDocumentSnapshot documentSnapshot : task.getResult()) {
+//                                usersList.add(documentSnapshot.toObject())
+//                            }
+//                        }
+//                    }
+//                });
+
         return view;
     }
 
@@ -81,8 +107,8 @@ public class ChatsFragment extends Fragment {
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 mUsers.clear();
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()){
-                    User user = snapshot.getValue(User.class);
-                    for (Chatlist chatlist : usersList){
+                    UserModel user = snapshot.getValue(UserModel.class);
+                    for (ChatlistModel chatlist : usersList){
                         if (user.getId().equals(chatlist.getId())){
                             mUsers.add(user);
                         }

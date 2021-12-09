@@ -10,7 +10,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.airjob.chatappfinal_05_12.Model.Chat;
+import com.airjob.chatappfinal_05_12.Model.ChatModel;
 import com.airjob.chatappfinal_05_12.R;
 import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;
@@ -24,12 +24,12 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
     public static final int MSG_TYPE_RIGHT = 1;
 
     private Context mContext;
-    private List<Chat> mChat;
+    private List<ChatModel> mChat;
     private String imageurl;
 
     FirebaseUser fuser;
 
-    public MessageAdapter(Context mContext, List<Chat> mChat, String imageurl) {
+    public MessageAdapter(Context mContext, List<ChatModel> mChat, String imageurl) {
         this.mContext = mContext;
         this.mChat = mChat;
         this.imageurl = imageurl;
@@ -49,7 +49,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
 
     @Override
     public void onBindViewHolder(@NonNull MessageAdapter.ViewHolder holder, int position) {
-        Chat chat = mChat.get(position);
+        ChatModel chat = mChat.get(position);
 
         holder.show_message.setText(chat.getMessage());
 

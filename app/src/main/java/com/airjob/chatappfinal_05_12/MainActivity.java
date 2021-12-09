@@ -18,66 +18,84 @@ import androidx.viewpager.widget.ViewPager;
 import com.airjob.chatappfinal_05_12.Fragments.ChatsFragment;
 import com.airjob.chatappfinal_05_12.Fragments.ProfileFragment;
 import com.airjob.chatappfinal_05_12.Fragments.UsersFragment;
-import com.airjob.chatappfinal_05_12.Model.User;
+import com.airjob.chatappfinal_05_12.Model.UserModel;
 import com.bumptech.glide.Glide;
 import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.EventListener;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class MainActivity extends AppCompatActivity {
 
-    CircleImageView profile_image;
-    TextView username;
+    // Var des widgets
+    private CircleImageView profile_image;
+    private TextView username;
 
-    FirebaseUser firebaseUser;
-    DatabaseReference reference;
+    // Var Firebase
+    private FirebaseUser firebaseUser;
+    private FirebaseFirestore db;
+    private DocumentReference userDocumentRef;
+
+    // Initialisation des widgets
+    private void init() {
+        profile_image = findViewById(R.id.profile_image);
+        username = findViewById(R.id.username);
+    }
+
+    // Initialisation de FirebaseUser
+    private void initFirebase() {
+        firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+        db = FirebaseFirestore.getInstance();
+        userDocumentRef = db.collection("Users").document(firebaseUser.getUid());
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Initialisation des widgets
+        init();
+        // Initialisation de Firebase
+        initFirebase();
+
+        // Gestion de la toolbar
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setTitle("Register");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setTitle(""); // Pour ne pas avoir de titre
+
+        // Query pour le SnapshotListner
+        Query query = db.collection("Users");
+
+        query.addSnapshotListener(new EventListener<QuerySnapshot>() {
+                    @Override
+                    public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
+                        for(QueryDocumentSnapshot documentSnapshot : value){
+                            UserModel user = documentSnapshot.toObject(UserModel.class);
+                            username.setText(user.getUsername());
+                            if (user.getImageURL().equals("default")){
+                                profile_image.setImageResource(R.mipmap.ic_launcher);
+                            } else {
+
+                                Glide.with(getApplicationContext()).load(user.getImageURL()).into(profile_image);
+                            }
+                        }
+                    }
+                });
 
 
-        profile_image = findViewById(R.id.profile_image);
-        username = findViewById(R.id.username);
-
-        firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        reference = FirebaseDatabase.getInstance().getReference("Users").child(firebaseUser.getUid());
-
-        reference.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                User user = dataSnapshot.getValue(User.class);
-                username.setText(user.getUsername());
-                if (user.getImageURL().equals("default")){
-                    profile_image.setImageResource(R.mipmap.ic_launcher);
-                } else {
-
-                    Glide.with(getApplicationContext()).load(user.getImageURL()).into(profile_image);
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
-
+        // Gestion de l'affichage du ViewPager
         TabLayout tabLayout = findViewById(R.id.tab_layout);
         ViewPager viewPager = findViewById(R.id.view_pager);
 
@@ -89,15 +107,16 @@ public class MainActivity extends AppCompatActivity {
 
         viewPager.setAdapter(viewPagerAdapter);
         tabLayout.setupWithViewPager(viewPager);
-
     }
 
+    // Création du menu
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu, menu);
         return true;
     }
 
+    // Gestion des clics du menu
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -111,6 +130,7 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
+    // Classe niché (inner claas) du ViewPager (version 1)
     class ViewPagerAdapter extends FragmentPagerAdapter {
 
         private ArrayList<Fragment> fragments;
@@ -145,13 +165,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // Gestion du statut de l'utilisateur
     private void status(String status) {
-        reference = FirebaseDatabase.getInstance().getReference("Users").child(firebaseUser.getUid());
-
-        HashMap<String, Object> hashMap = new HashMap<>();
-        hashMap.put("status", status);
-
-        reference.updateChildren(hashMap);
+        userDocumentRef.update("status", status);
     }
 
     @Override
@@ -161,8 +177,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
+    protected void onStop() {
+        super.onStop();
         status("offline");
     }
 

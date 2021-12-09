@@ -24,6 +24,10 @@
         <entry key="..\:/Android Studio/ChatAppFinal0512/app/src/main/res/layout/fragment_usersk.xml" value="0.1" />
         <entry key="..\:/Android Studio/ChatAppFinal0512/app/src/main/res/layout/user_item.xml" value="0.1" />
         <entry key="..\:/Android Studio/ChatAppFinal0512/app/src/main/res/menu/menu.xml" value="0.1" />
+        <entry key="..\:/Users/samue/AndroidStudioProjects/ChatAppFinal-05-12/app/src/main/res/layout/activity_login.xml" value="0.409375" />
+        <entry key="..\:/Users/samue/AndroidStudioProjects/ChatAppFinal-05-12/app/src/main/res/layout/activity_register.xml" value="0.1" />
+        <entry key="..\:/Users/samue/AndroidStudioProjects/ChatAppFinal-05-12/app/src/main/res/layout/activity_reset_password.xml" value="0.396875" />
+        <entry key="..\:/Users/samue/AndroidStudioProjects/ChatAppFinal-05-12/app/src/main/res/layout/activity_start.xml" value="0.409375" />
       </map>
     </option>
   </component>

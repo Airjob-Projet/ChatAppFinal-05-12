@@ -1,12 +1,12 @@
 package com.airjob.chatappfinal_05_12.Model;
 
-public class Chatlist {
+public class ChatlistModel {
     public String id;
 
-    public Chatlist() {
+    public ChatlistModel() {
     }
 
-    public Chatlist(String id) {
+    public ChatlistModel(String id) {
         this.id = id;
     }
 

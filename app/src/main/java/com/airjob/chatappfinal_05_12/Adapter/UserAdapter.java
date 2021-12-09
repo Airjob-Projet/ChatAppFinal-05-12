@@ -12,7 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.airjob.chatappfinal_05_12.MessageActivity;
-import com.airjob.chatappfinal_05_12.Model.User;
+import com.airjob.chatappfinal_05_12.Model.UserModel;
 import com.airjob.chatappfinal_05_12.R;
 import com.bumptech.glide.Glide;
 
@@ -20,10 +20,10 @@ import java.util.List;
 
 public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
     private Context mContext;
-    private List<User> mUsers;
+    private List<UserModel> mUsers;
     private boolean ischat;
 
-    public UserAdapter(Context mContext, List<User> mUsers, boolean ischat) {
+    public UserAdapter(Context mContext, List<UserModel> mUsers, boolean ischat) {
         this.mContext = mContext;
         this.mUsers = mUsers;
         this.ischat = ischat;
@@ -39,7 +39,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
 
-        final User user = mUsers.get(position);
+        final UserModel user = mUsers.get(position);
         holder.username.setText(user.getUsername());
         if (user.getImageURL().equals("default")) {
             holder.profile_image.setImageResource(R.mipmap.ic_launcher);

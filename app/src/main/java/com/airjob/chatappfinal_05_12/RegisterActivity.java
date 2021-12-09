@@ -2,7 +2,6 @@ package com.airjob.chatappfinal_05_12;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.AppCompatEditText;
 import androidx.appcompat.widget.Toolbar;
 
 import android.content.Intent;
@@ -13,41 +12,49 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.airjob.chatappfinal_05_12.Model.UserModel;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.HashMap;
 
 public class RegisterActivity extends AppCompatActivity {
 
-    AppCompatEditText username, email, password;
-    Button btn_register;
+    // Var des widgets
+    private EditText username, email, password;
+    private Button btn_register;
 
-    FirebaseAuth auth;
-    DatabaseReference reference;
+    // Var Firebase
+    private FirebaseAuth auth;
+    private FirebaseUser fUser;
+    private FirebaseFirestore db;
+    private DocumentReference userDocumentRef;
+    private CollectionReference userCollectionRef;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_register);
-
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setTitle("Register");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
+    // Initialisation des widgets
+    private void init(){
         username = findViewById(R.id.username);
         email = findViewById(R.id.email);
         password = findViewById(R.id.password);
         btn_register = findViewById(R.id.btn_register);
+    }
 
+    // Initialisation de FirebaseUser
+    private void initFirebase(){
         auth = FirebaseAuth.getInstance();
+        fUser = FirebaseAuth.getInstance().getCurrentUser();
+        db = FirebaseFirestore.getInstance();
+        userCollectionRef = db.collection("Users");
+        userDocumentRef = db.collection("Users").document();
+    }
 
+    private void btnRegister(){
         btn_register.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -67,7 +74,6 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     private void register(final String username, String email, String password){
-
         auth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
                     @Override
@@ -76,17 +82,12 @@ public class RegisterActivity extends AppCompatActivity {
                             FirebaseUser firebaseUser = auth.getCurrentUser();
                             assert firebaseUser != null;
                             String userid = firebaseUser.getUid();
+                            
+                            // Utilisation du model pour populate la db
+                            UserModel newUser = new UserModel(userid, username, "default", "offline", username.toLowerCase());
 
-                            reference = FirebaseDatabase.getInstance().getReference("Users").child(userid);
-
-                            HashMap<String, String> hashMap = new HashMap<>();
-                            hashMap.put("id", userid);
-                            hashMap.put("username", username);
-                            hashMap.put("imageURL", "default");
-                            hashMap.put("status", "offline");
-                            hashMap.put("search", username.toLowerCase());
-
-                            reference.setValue(hashMap).addOnCompleteListener(new OnCompleteListener<Void>() {
+                            userDocumentRef.set(newUser)
+                                    .addOnCompleteListener(new OnCompleteListener<Void>() {
                                 @Override
                                 public void onComplete(@NonNull Task<Void> task) {
                                     if (task.isSuccessful()){
@@ -102,5 +103,25 @@ public class RegisterActivity extends AppCompatActivity {
                         }
                     }
                 });
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_register);
+
+        // Initialisation des widgets
+        init();
+        // Initialisation de Firebase
+        initFirebase();
+
+        // Appel des méthodes pour la gestion des clics sur les boutons
+        btnRegister();
+
+        // Gestion de la toolbar
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setTitle("Register");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 }

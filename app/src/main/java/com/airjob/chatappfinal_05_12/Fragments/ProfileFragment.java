@@ -19,7 +19,7 @@ import android.webkit.MimeTypeMap;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.airjob.chatappfinal_05_12.Model.User;
+import com.airjob.chatappfinal_05_12.Model.UserModel;
 import com.airjob.chatappfinal_05_12.R;
 import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.Continuation;
@@ -71,13 +71,13 @@ public class ProfileFragment extends Fragment {
         reference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                User user = dataSnapshot.getValue(User.class);
-                username.setText(user.getUsername());
-                if (user.getImageURL().equals("default")){
-                    image_profile.setImageResource(R.mipmap.ic_launcher);
-                } else {
-                    Glide.with(getContext()).load(user.getImageURL()).into(image_profile);
-                }
+                UserModel user = dataSnapshot.getValue(UserModel.class);
+//                username.setText(user.getUsername());
+//                if (user.getImageURL().equals("default")){
+//                    image_profile.setImageResource(R.mipmap.ic_launcher);
+//                } else {
+//                    Glide.with(getContext()).load(user.getImageURL()).into(image_profile);
+//                }
             }
 
             @Override
@@ -103,7 +103,7 @@ public class ProfileFragment extends Fragment {
     }
 
     private String getFileExtension(Uri uri){
-        ContentResolver contentResolver = getContext().getContentResolver();
+        ContentResolver contentResolver = requireContext().getContentResolver();
         MimeTypeMap mimeTypeMap = MimeTypeMap.getSingleton();
         return mimeTypeMap.getExtensionFromMimeType(contentResolver.getType(uri));
     }

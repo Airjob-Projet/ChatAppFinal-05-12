@@ -1,6 +1,6 @@
 package com.airjob.chatappfinal_05_12.Model;
 
-public class User {
+public class UserModel {
 
     private String id;
     private String username;
@@ -9,7 +9,7 @@ public class User {
     private String search;
 
 
-    public User(String id, String username, String imageURL, String status, String search) {
+    public UserModel(String id, String username, String imageURL, String status, String search) {
         this.id = id;
         this.username = username;
         this.imageURL = imageURL;
@@ -17,7 +17,7 @@ public class User {
         this.search = search;
     }
 
-    public User() {
+    public UserModel() {
     }
 
     public String getId() {

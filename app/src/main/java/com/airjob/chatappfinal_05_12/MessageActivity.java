@@ -1,10 +1,8 @@
 package com.airjob.chatappfinal_05_12;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+import static com.airjob.chatappfinal_05_12.ConstantNode.NODE_CHATLIST;
+import static com.airjob.chatappfinal_05_12.ConstantNode.NODE_CHATS;
+import static com.airjob.chatappfinal_05_12.ConstantNode.NODE_USERS;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -15,64 +13,69 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.airjob.chatappfinal_05_12.Adapter.MessageAdapter;
-import com.airjob.chatappfinal_05_12.Model.Chat;
-import com.airjob.chatappfinal_05_12.Model.User;
+import com.airjob.chatappfinal_05_12.Model.ChatModel;
+import com.airjob.chatappfinal_05_12.Model.UserModel;
 import com.bumptech.glide.Glide;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.EventListener;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
+import com.airjob.chatappfinal_05_12.ConstantNode;
+
 public class MessageActivity extends AppCompatActivity {
 
-    CircleImageView profile_image;
-    TextView username;
+    private static final String TAG = "#######>>>>>";
 
-    FirebaseUser fuser;
-    DatabaseReference reference;
+    // Var des widgets
+    private CircleImageView profile_image;
+    private TextView username;
+    private ImageButton btn_send;
+    private EditText text_send;
+    private RecyclerView recyclerView;
+    private String idParticipantChat;
 
-    ImageButton btn_send;
-    EditText text_send;
+    // Var globales
+    private MessageAdapter messageAdapter;
+    private List<ChatModel> mchat;
+    private Intent intent;
+    private ValueEventListener seenListener;
 
-    MessageAdapter messageAdapter;
-    List<Chat> mchat;
+    // Var Firebase
+    private FirebaseUser currentUser;
+    private FirebaseFirestore db;
 
-    RecyclerView recyclerView;
+    private CollectionReference chatCollectionRef;
 
-    Intent intent;
+    private DocumentReference userDocumentRef;
+    private DocumentReference chatDocumentRef;
+    private DocumentReference chatlistDocumentRef;
 
-    ValueEventListener seenListener;
 
-    String userid;
-    private static final String TAG = "######";
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_message);
-
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setTitle("");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-//        toolbar.setNavigationOnClickListener((view) -> {
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startActivity(new Intent(MessageActivity.this, MainActivity.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
-            }
-        });
-
+    // Initialisation des widgets
+    private void init() {
         recyclerView = findViewById(R.id.recycler_view_message_activity);
         recyclerView.setHasFixedSize(true);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getApplicationContext());
@@ -83,149 +86,194 @@ public class MessageActivity extends AppCompatActivity {
         username = findViewById(R.id.username);
         btn_send = findViewById(R.id.btn_send);
         text_send = findViewById(R.id.text_send);
+    }
 
-        intent = getIntent();
-        userid = intent.getStringExtra("userid");
-        fuser = FirebaseAuth.getInstance().getCurrentUser();
+    // Initialisation de FirebaseUser
+    private void initFirebase() {
+        currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        db = FirebaseFirestore.getInstance();
 
+        chatCollectionRef = db.collection(NODE_CHATS);
+
+        userDocumentRef = db.collection(NODE_USERS).document(currentUser.getUid());
+        chatDocumentRef = db.collection(NODE_CHATS).document(currentUser.getUid());
+        chatlistDocumentRef = db.collection(NODE_CHATLIST).document(currentUser.getUid());
+    }
+
+    // Gestion des clics sur les boutons
+    private void btnSend() {
         btn_send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 String msg = text_send.getText().toString();
                 if (!msg.equals("")) {
-                    sendMessage(fuser.getUid(), userid, msg);
-                    Log.i(TAG, "onClick: " + fuser.getUid() + " " + msg);
+                    sendMessage(currentUser.getUid(), idParticipantChat, msg);
                 } else {
-                    Toast.makeText(MessageActivity.this, "You can't send empty message", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MessageActivity.this, "You can't send an empty message", Toast.LENGTH_SHORT).show();
                 }
                 text_send.setText("");
             }
         });
+    }
 
-        reference = FirebaseDatabase.getInstance().getReference("Users").child(userid);
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_message);
 
-        reference.addValueEventListener(new ValueEventListener() {
+        // Initialisation des widgets
+        init();
+        // Initialisation de Firebase
+        initFirebase();
+
+        // Gestion de la toolbar
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setTitle("");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        // Gestion de la navigation de la toolbar
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                User user = dataSnapshot.getValue(User.class);
-                username.setText(user.getUsername());
-                if (user.getImageURL().equals("default")){
-                    profile_image.setImageResource(R.mipmap.ic_launcher);
-                } else {
-                    //TODO ajouter les options de glide en cas d'erreur
-                    Glide.with(getApplicationContext()).load(user.getImageURL()).into(profile_image);
-                }
-
-                readMessages(fuser.getUid(), userid, user.getImageURL());
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
+            public void onClick(View view) {
+                startActivity(new Intent(MessageActivity.this, MainActivity.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
             }
         });
 
-        seenMessage(userid);
-    }
+        // Récupération de l'id du participant au chat via l'intent
+        intent = getIntent();
+        idParticipantChat = intent.getStringExtra("userid");
 
-    private void seenMessage(String userid) {
-        reference = FirebaseDatabase.getInstance().getReference("Chats");
-        seenListener = reference.addValueEventListener(new ValueEventListener() {
+        // Appel des clics sur les boutons
+        btnSend();
+
+        // Query pour le SnapshotListner
+        Query query = db.collection("Users");
+
+        query.addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    Chat chat = snapshot.getValue(Chat.class);
-                    if (chat.getReceiver().equals(fuser.getUid()) && chat.getSender().equals(userid)) {
-                        HashMap<String, Object> hashMap = new HashMap<>();
-                        hashMap.put("isseen", true);
-                        snapshot.getRef().updateChildren(hashMap);
+            public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
+                for (QueryDocumentSnapshot documentSnapshot : value) {
+                    UserModel user = documentSnapshot.toObject(UserModel.class);
+                    username.setText(user.getUsername());
+                    if (user.getImageURL().equals("default")) {
+                        profile_image.setImageResource(R.mipmap.ic_launcher);
+                    } else {
+                        Glide.with(getApplicationContext()).load(user.getImageURL()).into(profile_image);
                     }
+                    readMessages(currentUser.getUid(), idParticipantChat, user.getImageURL());
                 }
             }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
         });
+        seenMessage(idParticipantChat);
+
     }
 
+
+    // Les messages on-ils été vu ?
+    private void seenMessage(String userid) {
+//        reference = FirebaseDatabase.getInstance().getReference("Chats");
+//        seenListener = reference.addValueEventListener(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+//                    ChatModel chat = snapshot.getValue(ChatModel.class);
+//                    if (chat.getReceiver().equals(fuser.getUid()) && chat.getSender().equals(userid)) {
+//                        HashMap<String, Object> hashMap = new HashMap<>();
+//                        hashMap.put("isseen", true);
+//                        snapshot.getRef().updateChildren(hashMap);
+//                    }
+//                }
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//            }
+//        });
+    }
+
+    // Envoi des messages
     private void sendMessage(String sender, final String receiver, String message) {
-        DatabaseReference reference = FirebaseDatabase.getInstance().getReference();
 
-        HashMap<String, Object> hashMap = new HashMap<>();
-        hashMap.put("sender", sender);
-        hashMap.put("receiver", receiver);
-        hashMap.put("message", message);
-        hashMap.put("isseen", false);
+        // Upload du message dans la table Chats
+        ChatModel newChat = new ChatModel(sender, receiver, message, false);
+        long time= System.currentTimeMillis();
+        String docId = String.valueOf(time);
+        chatCollectionRef.document(docId).set(newChat)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void unused) {
+//                        Log.d(TAG, "DocumentSnapshot written with ID: " + documentReference.getId());
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.w("TAG", "Error adding document", e);
+                    }
+                });
 
-        reference.child("Chats").push().setValue(hashMap);
+        // Upload de la liaison des participants du chat en question dans Chatlist
+//        chatlistDocumentRef.update(idParticipantChat, idParticipantChat);
 
-        final DatabaseReference chatRef = FirebaseDatabase.getInstance().getReference("Chatlist")
-                .child(fuser.getUid())
-                .child(userid);
-        chatRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if (!dataSnapshot.exists()) {
-                    chatRef.child("id").setValue(userid);
-                }
-            }
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
+//        final DatabaseReference chatRef = FirebaseDatabase.getInstance().getReference("Chatlist")
+//                .child(firebaseUser.getUid())
+//                .child(userid);
+//        chatRef.addListenerForSingleValueEvent(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                if (!dataSnapshot.exists()) {
+//                    chatRef.child("id").setValue(userid);
+//                }
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//            }
+//        });
     }
 
-    private void readMessages(final String myid, final String userid, final String imageurl){
+    // Affichage des messages
+    private void readMessages(final String myid, final String userid, final String imageurl) {
         mchat = new ArrayList<>();
 
-        reference = FirebaseDatabase.getInstance().getReference("Chats");
-        reference.addValueEventListener(new ValueEventListener() {
+        Query query = db.collection(NODE_CHATS);
+        query.addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+            public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
                 mchat.clear();
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()){
-                    Chat chat = snapshot.getValue(Chat.class);
+                for (QueryDocumentSnapshot documentSnapshot : value) {
+                    ChatModel chat = documentSnapshot.toObject(ChatModel.class);
                     if (chat.getReceiver().equals(myid) && chat.getSender().equals(userid) ||
-                            chat.getReceiver().equals(userid) && chat.getSender().equals(myid)){
+                            chat.getReceiver().equals(userid) && chat.getSender().equals(myid)) {
                         mchat.add(chat);
+                        Log.i(TAG, "onEvent: " + mchat);
                     }
                     messageAdapter = new MessageAdapter(MessageActivity.this, mchat, imageurl);
                     recyclerView.setAdapter(messageAdapter);
                 }
             }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
         });
+
     }
 
+    // Gestion du statut de l'utilisateur
     private void status(String status) {
-        reference = FirebaseDatabase.getInstance().getReference("Users").child(fuser.getUid());
-
-        HashMap<String, Object> hashMap = new HashMap<>();
-        hashMap.put("status", status);
-
-        reference.updateChildren(hashMap);
+        userDocumentRef.update("status", status);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         status("Online");
-
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
-        reference.removeEventListener(seenListener);
+    protected void onStop() {
+        super.onStop();
         status("offline");
-
     }
 }

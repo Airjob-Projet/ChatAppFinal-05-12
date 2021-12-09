@@ -1,30 +1,62 @@
 package com.airjob.chatappfinal_05_12;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 public class StartActivity extends AppCompatActivity {
 
-    Button login, register;
+    // Var des widgets
+    private Button login, register;
 
-    FirebaseUser firebaseUser;
+    // Var Firebase
+    private FirebaseUser fUser;
+    private FirebaseFirestore db;
 
+    // Initialisation des widgets
+    private void init(){
+        login = findViewById(R.id.login);
+        register = findViewById(R.id.register);
+    }
+
+    // Initialisation de FirebaseUser
+    private void initFirebase(){
+        fUser = FirebaseAuth.getInstance().getCurrentUser();
+        db = FirebaseFirestore.getInstance();
+    }
+
+    // Gestion des clics sur les boutons
+    private void btnLogin() {
+        login.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(StartActivity.this, LoginActivity.class));
+            }
+        });
+    }
+
+    private void btnRegister() {
+        register.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(StartActivity.this, RegisterActivity.class));
+            }
+        });
+    }
+
+    // Cycles de vie de l'app
     @Override
     protected void onStart() {
         super.onStart();
-
-        firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-
-        if (firebaseUser != null){
-            Intent intent = new Intent(StartActivity.this, MainActivity.class);
-            startActivity(intent);
+        if (fUser != null){
+            startActivity(new Intent(StartActivity.this, MainActivity.class));
             finish();
         }
     }
@@ -34,21 +66,13 @@ public class StartActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_start);
 
+        // Initialisation des widgets
+        init();
+        // Initialisation de Firebase
+        initFirebase();
 
-        login = findViewById(R.id.login);
-        register = findViewById(R.id.register);
-
-        login.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startActivity(new Intent(StartActivity.this, LoginActivity.class));
-            }
-        });
-        register.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startActivity(new Intent(StartActivity.this, RegisterActivity.class));
-            }
-        });
+        // Appel des méthodes pour la gestion des clics sur les boutons
+        btnLogin();
+        btnRegister();
     }
 }
