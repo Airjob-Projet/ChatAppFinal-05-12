@@ -22,6 +22,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.airjob.chatappfinal_05_12.Adapter.MessageAdapter;
 import com.airjob.chatappfinal_05_12.Model.ChatModel;
+import com.airjob.chatappfinal_05_12.Model.ChatlistModel;
 import com.airjob.chatappfinal_05_12.Model.UserModel;
 import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -68,6 +69,7 @@ public class MessageActivity extends AppCompatActivity {
     private FirebaseFirestore db;
 
     private CollectionReference chatCollectionRef;
+    private CollectionReference chatListCollectionRef;
 
     private DocumentReference userDocumentRef;
     private DocumentReference chatDocumentRef;
@@ -94,6 +96,7 @@ public class MessageActivity extends AppCompatActivity {
         db = FirebaseFirestore.getInstance();
 
         chatCollectionRef = db.collection(NODE_CHATS);
+        chatListCollectionRef = db.collection(NODE_CHATLIST);
 
         userDocumentRef = db.collection(NODE_USERS).document(currentUser.getUid());
         chatDocumentRef = db.collection(NODE_CHATS).document(currentUser.getUid());
@@ -142,7 +145,8 @@ public class MessageActivity extends AppCompatActivity {
 
         // Récupération de l'id du participant au chat via l'intent
         intent = getIntent();
-        idParticipantChat = intent.getStringExtra("userid");
+        idParticipantChat = intent.getStringExtra("idParticipantChat");
+        Log.i("#####>>>>>", "onCreate: " + idParticipantChat);
 
         // Appel des clics sur les boutons
         btnSend();
@@ -166,9 +170,7 @@ public class MessageActivity extends AppCompatActivity {
             }
         });
         seenMessage(idParticipantChat);
-
     }
-
 
     // Les messages on-ils été vu ?
     private void seenMessage(String userid) {
@@ -201,12 +203,6 @@ public class MessageActivity extends AppCompatActivity {
         long time= System.currentTimeMillis();
         String docId = String.valueOf(time);
         chatCollectionRef.document(docId).set(newChat)
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void unused) {
-//                        Log.d(TAG, "DocumentSnapshot written with ID: " + documentReference.getId());
-                    }
-                })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
@@ -215,8 +211,10 @@ public class MessageActivity extends AppCompatActivity {
                 });
 
         // Upload de la liaison des participants du chat en question dans Chatlist
-//        chatlistDocumentRef.update(idParticipantChat, idParticipantChat);
-
+//        chatlistDocumentRef.set(idParticipantChat, idParticipantChat);
+        ChatlistModel newChatChannel = new ChatlistModel(idParticipantChat);
+        newChatChannel.setId(idParticipantChat);
+        chatListCollectionRef.document(currentUser.getUid()).set(idParticipantChat);
 
 //        final DatabaseReference chatRef = FirebaseDatabase.getInstance().getReference("Chatlist")
 //                .child(firebaseUser.getUid())
@@ -250,7 +248,6 @@ public class MessageActivity extends AppCompatActivity {
                     if (chat.getReceiver().equals(myid) && chat.getSender().equals(userid) ||
                             chat.getReceiver().equals(userid) && chat.getSender().equals(myid)) {
                         mchat.add(chat);
-                        Log.i(TAG, "onEvent: " + mchat);
                     }
                     messageAdapter = new MessageAdapter(MessageActivity.this, mchat, imageurl);
                     recyclerView.setAdapter(messageAdapter);

@@ -1,19 +1,17 @@
 package com.airjob.chatappfinal_05_12.Fragments;
 
 import android.os.Bundle;
-
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
+
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.airjob.chatappfinal_05_12.Adapter.UserAdapter;
 import com.airjob.chatappfinal_05_12.Model.UserModel;
@@ -23,6 +21,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
@@ -46,7 +45,7 @@ public class UsersFragment extends Fragment {
     private FirebaseFirestore db;
 
     // Initialisation des widgets
-    private void init(){
+    private void init() {
         recyclerView = view.findViewById(R.id.recycler_view_user_fragment);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -57,7 +56,7 @@ public class UsersFragment extends Fragment {
     }
 
     // Initialisation de FirebaseUser
-    private void initFirebase(){
+    private void initFirebase() {
         firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         db = FirebaseFirestore.getInstance();
     }
@@ -79,10 +78,12 @@ public class UsersFragment extends Fragment {
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
 
             }
+
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 searchUsers(charSequence.toString().toLowerCase());
             }
+
             @Override
             public void afterTextChanged(Editable editable) {
 
@@ -93,41 +94,11 @@ public class UsersFragment extends Fragment {
 
     private void searchUsers(String s) {
 
-        // Avec RealTime
-//        Query query = FirebaseDatabase.getInstance().getReference("Users").orderByChild("search")
-//                .startAt(s)
-//                .endAt(s+"\uf8ff");
-//
-//        query.addValueEventListener(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-//                mUsers.clear();
-//                for (DataSnapshot snapshot : dataSnapshot.getChildren()){
-//                    User user = snapshot.getValue(User.class);
-//
-//                    assert user != null;
-//                    assert fuser != null;
-//                    if (!user.getId().equals(fuser.getUid())){
-//                        mUsers.add(user);
-//                    }
-//                }
-//
-//                userAdapter = new UserAdapter(getContext(), mUsers, false);
-//                recyclerView.setAdapter(userAdapter);
-//            }
-//
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError databaseError) {
-//
-//            }
-//        });
-
-        // Avec Firestore
-        com.google.firebase.firestore.Query query1 = db
+        Query query1 = db
                 .collection("Users")
                 .orderBy("search")
                 .startAt(s)
-                .endAt(s+"\uf8ff");
+                .endAt(s + "\uf8ff");
 
         query1
                 .addSnapshotListener(new EventListener<QuerySnapshot>() {
@@ -135,12 +106,12 @@ public class UsersFragment extends Fragment {
                     public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
                         mUsers.clear();
 
-                        for(QueryDocumentSnapshot documentSnapshot : value){
+                        for (QueryDocumentSnapshot documentSnapshot : value) {
                             UserModel user = documentSnapshot.toObject(UserModel.class);
 
                             assert user != null;
                             assert firebaseUser != null;
-                            if(!user.getId().equals(firebaseUser.getUid())){
+                            if (!user.getId().equals(firebaseUser.getUid())) {
                                 mUsers.add(user);
                             }
                         }
@@ -152,34 +123,6 @@ public class UsersFragment extends Fragment {
     }
 
     private void showUsers() {
-        // Avec RealTime
-//        DatabaseReference reference = FirebaseDatabase.getInstance().getReference("Users");
-//
-//        reference.addValueEventListener(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-//                if (search_users.getText().toString().equals("")) {
-//                    mUsers.clear();
-//                    for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-//                        User user = snapshot.getValue(User.class);
-//                        if (!user.getId().equals(fuser.getUid())) {
-//                            mUsers.add(user);
-//                        }
-//
-//                    }
-//
-//                    userAdapter = new UserAdapter(getContext(), mUsers, false);
-//                    recyclerView.setAdapter(userAdapter);
-//                }
-//            }
-//
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError databaseError) {
-//
-//            }
-//        });
-
-        // Avec Firestore
         db
                 .collection("Users")
                 .addSnapshotListener(new EventListener<QuerySnapshot>() {
@@ -187,12 +130,12 @@ public class UsersFragment extends Fragment {
                     public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
                         mUsers.clear();
 
-                        for(QueryDocumentSnapshot documentSnapshot : value){
+                        for (QueryDocumentSnapshot documentSnapshot : value) {
                             UserModel user = documentSnapshot.toObject(UserModel.class);
 
                             assert user != null;
                             assert firebaseUser != null;
-                            if(!user.getId().equals(firebaseUser.getUid())){
+                            if (!user.getId().equals(firebaseUser.getUid())) {
                                 mUsers.add(user);
                             }
                         }

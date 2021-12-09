@@ -1,5 +1,7 @@
 package com.airjob.chatappfinal_05_12.Model;
 
+import com.google.firebase.firestore.Exclude;
+
 public class ChatlistModel {
     public String id;
 

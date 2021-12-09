@@ -2,6 +2,7 @@ package com.airjob.chatappfinal_05_12.Adapter;
 
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -64,7 +65,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(mContext, MessageActivity.class);
-                intent.putExtra("userid", user.getId());
+                intent.putExtra("idParticipantChat", user.getId());
                 mContext.startActivity(intent);
             }
         });
