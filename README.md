@@ -1,6 +1,6 @@
-### CHAT APP
+# CHAT APP
 
-# Sur une propostion d'Hamdi des modifications de Samuel pour les DAM
+### Sur une propostion d'Hamdi des modifications de Samuel pour les DAM
 
 Petite application de chat avec 
 - Une connexion Email // Password
