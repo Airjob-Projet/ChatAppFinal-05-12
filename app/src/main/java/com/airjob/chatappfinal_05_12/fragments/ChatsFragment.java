@@ -1,10 +1,9 @@
-package com.airjob.chatappfinal_05_12.Fragments;
+package com.airjob.chatappfinal_05_12.fragments;
 
 import static com.airjob.chatappfinal_05_12.ConstantNode.NODE_CHATLIST;
 import static com.airjob.chatappfinal_05_12.ConstantNode.NODE_USERS;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,9 +14,9 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.airjob.chatappfinal_05_12.Adapter.UserAdapter;
-import com.airjob.chatappfinal_05_12.Model.ChatlistModel;
-import com.airjob.chatappfinal_05_12.Model.UserModel;
+import com.airjob.chatappfinal_05_12.adapter.UserAdapter;
+import com.airjob.chatappfinal_05_12.model.ChatlistModel;
+import com.airjob.chatappfinal_05_12.model.UserModel;
 import com.airjob.chatappfinal_05_12.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;

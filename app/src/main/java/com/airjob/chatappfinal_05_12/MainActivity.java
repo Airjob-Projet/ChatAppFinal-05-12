@@ -15,10 +15,11 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
-import com.airjob.chatappfinal_05_12.Fragments.ChatsFragment;
-import com.airjob.chatappfinal_05_12.Fragments.ProfileFragment;
-import com.airjob.chatappfinal_05_12.Fragments.UsersFragment;
-import com.airjob.chatappfinal_05_12.Model.UserModel;
+import com.airjob.chatappfinal_05_12.fragments.ChatsFragment;
+import com.airjob.chatappfinal_05_12.fragments.ProfileFragment;
+import com.airjob.chatappfinal_05_12.fragments.UsersFragment;
+import com.airjob.chatappfinal_05_12.login.StartActivity;
+import com.airjob.chatappfinal_05_12.model.UserModel;
 import com.bumptech.glide.Glide;
 import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.auth.FirebaseAuth;

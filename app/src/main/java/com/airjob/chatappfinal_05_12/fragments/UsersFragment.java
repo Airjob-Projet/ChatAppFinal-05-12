@@ -1,4 +1,4 @@
-package com.airjob.chatappfinal_05_12.Fragments;
+package com.airjob.chatappfinal_05_12.fragments;
 
 import android.os.Bundle;
 import android.text.Editable;
@@ -13,8 +13,8 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.airjob.chatappfinal_05_12.Adapter.UserAdapter;
-import com.airjob.chatappfinal_05_12.Model.UserModel;
+import com.airjob.chatappfinal_05_12.adapter.UserAdapter;
+import com.airjob.chatappfinal_05_12.model.UserModel;
 import com.airjob.chatappfinal_05_12.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;

@@ -1,4 +1,4 @@
-package com.airjob.chatappfinal_05_12;
+package com.airjob.chatappfinal_05_12.login;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -7,6 +7,8 @@ import android.widget.Button;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.airjob.chatappfinal_05_12.MainActivity;
+import com.airjob.chatappfinal_05_12.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -17,7 +19,7 @@ public class StartActivity extends AppCompatActivity {
     private Button login, register;
 
     // Var Firebase
-    private FirebaseUser fUser;
+    private FirebaseUser currentUser;
     private FirebaseFirestore db;
 
     // Initialisation des widgets
@@ -28,7 +30,7 @@ public class StartActivity extends AppCompatActivity {
 
     // Initialisation de FirebaseUser
     private void initFirebase(){
-        fUser = FirebaseAuth.getInstance().getCurrentUser();
+        currentUser = FirebaseAuth.getInstance().getCurrentUser();
         db = FirebaseFirestore.getInstance();
     }
 
@@ -55,7 +57,7 @@ public class StartActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        if (fUser != null){
+        if (currentUser != null){
             startActivity(new Intent(StartActivity.this, MainActivity.class));
             finish();
         }

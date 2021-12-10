@@ -1,6 +1,4 @@
-package com.airjob.chatappfinal_05_12.Model;
-
-import com.google.firebase.firestore.Exclude;
+package com.airjob.chatappfinal_05_12.model;
 
 import java.util.List;
 

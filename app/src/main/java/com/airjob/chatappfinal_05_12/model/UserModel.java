@@ -1,4 +1,4 @@
-package com.airjob.chatappfinal_05_12.Model;
+package com.airjob.chatappfinal_05_12.model;
 
 public class UserModel {
 
@@ -7,17 +7,18 @@ public class UserModel {
     private String imageURL;
     private String status;
     private String search;
+    private String messageToken;
 
+    public UserModel() {
+    }
 
-    public UserModel(String id, String username, String imageURL, String status, String search) {
+    public UserModel(String id, String username, String imageURL, String status, String search, String messageToken) {
         this.id = id;
         this.username = username;
         this.imageURL = imageURL;
         this.status = status;
         this.search = search;
-    }
-
-    public UserModel() {
+        this.messageToken = messageToken;
     }
 
     public String getId() {
@@ -58,5 +59,13 @@ public class UserModel {
 
     public void setSearch(String search) {
         this.search = search;
+    }
+
+    public String getMessageToken() {
+        return messageToken;
+    }
+
+    public void setMessageToken(String messageToken) {
+        this.messageToken = messageToken;
     }
 }

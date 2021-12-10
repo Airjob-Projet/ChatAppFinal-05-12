@@ -4,7 +4,11 @@ import static com.airjob.chatappfinal_05_12.ConstantNode.NODE_CHATLIST;
 import static com.airjob.chatappfinal_05_12.ConstantNode.NODE_CHATS;
 import static com.airjob.chatappfinal_05_12.ConstantNode.NODE_USERS;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -17,19 +21,20 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.airjob.chatappfinal_05_12.Adapter.MessageAdapter;
-import com.airjob.chatappfinal_05_12.Model.ChatModel;
-import com.airjob.chatappfinal_05_12.Model.UserModel;
+import com.airjob.chatappfinal_05_12.adapter.MessageAdapter;
+import com.airjob.chatappfinal_05_12.model.ChatModel;
+import com.airjob.chatappfinal_05_12.model.UserModel;
 import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -63,7 +68,7 @@ public class MessageActivity extends AppCompatActivity {
     private MessageAdapter messageAdapter;
     private List<ChatModel> mchat;
     private Intent intent;
-    private ValueEventListener seenListener;
+    private String CHANNEL_ID = "Messages notifications";
 
     // Var Firebase
     private FirebaseUser currentUser;
@@ -109,9 +114,12 @@ public class MessageActivity extends AppCompatActivity {
         btn_send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                String token = "";
                 String msg = text_send.getText().toString();
                 if (!msg.equals("")) {
                     sendMessage(currentUser.getUid(), idParticipantChat, msg);
+                    sendNotification(currentUser.getUid(), msg, token);
+                    createNotificationChannel();
                 } else {
                     Toast.makeText(MessageActivity.this, "You can't send an empty message", Toast.LENGTH_SHORT).show();
                 }
@@ -172,6 +180,7 @@ public class MessageActivity extends AppCompatActivity {
         seenMessage(idParticipantChat);
     }
 
+    //TODO ###SAM Finir isSeen
     // Les messages on-ils été vu ?
     private void seenMessage(String userid) {
 //        reference = FirebaseDatabase.getInstance().getReference("Chats");
@@ -211,7 +220,7 @@ public class MessageActivity extends AppCompatActivity {
                 });
 
         // Upload de la liaison des participants du chat en question dans Chatlist
-        HashMap <String, Object> addUserToArrayMap = new HashMap<>();
+        HashMap<String, Object> addUserToArrayMap = new HashMap<>();
         addUserToArrayMap.put("id", FieldValue.arrayUnion(idParticipantChat));
 
 
@@ -230,43 +239,84 @@ public class MessageActivity extends AppCompatActivity {
                 });
     }
 
-// Affichage des messages
-private void readMessages(final String myid,final String userid,final String imageurl){
-        mchat=new ArrayList<>();
+    // Affichage des messages
+    private void readMessages(final String myid, final String userid, final String imageurl) {
+        mchat = new ArrayList<>();
 
-        Query query=db.collection(NODE_CHATS);
-        query.addSnapshotListener(new EventListener<QuerySnapshot>(){
-@Override
-public void onEvent(@Nullable QuerySnapshot value,@Nullable FirebaseFirestoreException error){
-        mchat.clear();
-        for(QueryDocumentSnapshot documentSnapshot:value){
-        ChatModel chat=documentSnapshot.toObject(ChatModel.class);
-        if(chat.getReceiver().equals(myid)&&chat.getSender().equals(userid)||
-        chat.getReceiver().equals(userid)&&chat.getSender().equals(myid)){
-        mchat.add(chat);
-        }
-        messageAdapter=new MessageAdapter(MessageActivity.this,mchat,imageurl);
-        recyclerView.setAdapter(messageAdapter);
-        }
-        }
+        Query query = db.collection(NODE_CHATS);
+        query.addSnapshotListener(new EventListener<QuerySnapshot>() {
+            @Override
+            public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
+                mchat.clear();
+                for (QueryDocumentSnapshot documentSnapshot : value) {
+                    ChatModel chat = documentSnapshot.toObject(ChatModel.class);
+                    if (chat.getReceiver().equals(myid) && chat.getSender().equals(userid) ||
+                            chat.getReceiver().equals(userid) && chat.getSender().equals(myid)) {
+                        mchat.add(chat);
+                    }
+                    messageAdapter = new MessageAdapter(MessageActivity.this, mchat, imageurl);
+                    recyclerView.setAdapter(messageAdapter);
+                }
+            }
         });
 
-        }
+    }
 
-// Gestion du statut de l'utilisateur
-private void status(String status){
-        userDocumentRef.update("status",status);
-        }
+    // Création du contenu de la notification Push qui sera envoyée au destinataire
+    private void sendNotification(String sender, String msg, String token){
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(MessageActivity.this,
+                CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_chat)
+                .setContentTitle(sender)
+                .setContentText(msg)
+//                .setContentIntent(pendingIntent) // Ouverture de l'application sur la page du chat
+                .setAutoCancel(true)
+//                .setLargeIcon(bitmap) // Ajout de l'avatar de l'expéditeur
+                .setColor(getResources().getColor(R.color.teal_200))
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT); // La priorité de la notification en général DEFAULT
 
-@Override
-protected void onResume(){
+        NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(MessageActivity.this);
+        notificationManagerCompat.notify(1, builder.build()); // ATTENTION l'id est UNIQUE pour chacune des notifications que vous allez créer
+    }
+
+    // 2 Pour afficher les notifications sur les versions supérieures à Android 8 // Api26+
+    private void createNotificationChannel() {
+        // On créé des Notification channel seulement pour les versions API 26 et +
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) { //O = Oreo 8.0
+            String name = "Message notification";
+            String description = "Message's channel notification";
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+            channel.setDescription(description);
+
+            // Enregistrement de la channel avec le service d'android OS
+            NotificationManager manager = getSystemService(NotificationManager.class);
+            manager.createNotificationChannel(channel);
+        }
+    }
+
+    // Pending Intent pour ouvrir l'activité message lors du clic sur la notification
+    private void creaIntent() {
+        Intent intent = new Intent(MessageActivity.this, MessageActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                MessageActivity.this, 0, intent, 0);
+    }
+
+    // Gestion du statut de l'utilisateur
+    private void status(String status) {
+        userDocumentRef.update("status", status);
+    }
+
+    @Override
+    protected void onResume() {
         super.onResume();
         status("Online");
-        }
+    }
 
-@Override
-protected void onStop(){
+    @Override
+    protected void onStop() {
         super.onStop();
         status("offline");
-        }
-        }
+    }
+}

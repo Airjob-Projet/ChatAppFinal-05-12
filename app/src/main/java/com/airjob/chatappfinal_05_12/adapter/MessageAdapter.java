@@ -1,4 +1,4 @@
-package com.airjob.chatappfinal_05_12.Adapter;
+package com.airjob.chatappfinal_05_12.adapter;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -10,7 +10,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.airjob.chatappfinal_05_12.Model.ChatModel;
+import com.airjob.chatappfinal_05_12.model.ChatModel;
 import com.airjob.chatappfinal_05_12.R;
 import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;

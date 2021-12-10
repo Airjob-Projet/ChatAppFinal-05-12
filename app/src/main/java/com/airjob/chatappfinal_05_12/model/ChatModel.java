@@ -1,4 +1,4 @@
-package com.airjob.chatappfinal_05_12.Model;
+package com.airjob.chatappfinal_05_12.model;
 
 public class ChatModel {
     private String sender;

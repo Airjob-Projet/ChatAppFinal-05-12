@@ -1,8 +1,7 @@
-package com.airjob.chatappfinal_05_12.Adapter;
+package com.airjob.chatappfinal_05_12.adapter;
 
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,7 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.airjob.chatappfinal_05_12.MessageActivity;
-import com.airjob.chatappfinal_05_12.Model.UserModel;
+import com.airjob.chatappfinal_05_12.model.UserModel;
 import com.airjob.chatappfinal_05_12.R;
 import com.bumptech.glide.Glide;
 
