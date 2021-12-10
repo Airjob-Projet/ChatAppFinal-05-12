@@ -34,7 +34,6 @@ public class RegisterActivity extends AppCompatActivity {
     private FirebaseAuth auth;
     private FirebaseUser fUser;
     private FirebaseFirestore db;
-    private DocumentReference userDocumentRef;
     private CollectionReference userCollectionRef;
 
     // Initialisation des widgets
@@ -51,7 +50,6 @@ public class RegisterActivity extends AppCompatActivity {
         fUser = FirebaseAuth.getInstance().getCurrentUser();
         db = FirebaseFirestore.getInstance();
         userCollectionRef = db.collection("Users");
-        userDocumentRef = db.collection("Users").document();
     }
 
     private void btnRegister(){
@@ -86,7 +84,9 @@ public class RegisterActivity extends AppCompatActivity {
                             // Utilisation du model pour populate la db
                             UserModel newUser = new UserModel(userid, username, "default", "offline", username.toLowerCase());
 
-                            userDocumentRef.set(newUser)
+                            userCollectionRef
+                                    .document(userid)
+                                    .set(newUser)
                                     .addOnCompleteListener(new OnCompleteListener<Void>() {
                                 @Override
                                 public void onComplete(@NonNull Task<Void> task) {

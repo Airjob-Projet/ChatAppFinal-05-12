@@ -22,17 +22,19 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.airjob.chatappfinal_05_12.Adapter.MessageAdapter;
 import com.airjob.chatappfinal_05_12.Model.ChatModel;
-import com.airjob.chatappfinal_05_12.Model.ChatlistModel;
 import com.airjob.chatappfinal_05_12.Model.UserModel;
 import com.bumptech.glide.Glide;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.Query;
@@ -40,11 +42,10 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import de.hdodenhof.circleimageview.CircleImageView;
-
-import com.airjob.chatappfinal_05_12.ConstantNode;
 
 public class MessageActivity extends AppCompatActivity {
 
@@ -146,7 +147,6 @@ public class MessageActivity extends AppCompatActivity {
         // Récupération de l'id du participant au chat via l'intent
         intent = getIntent();
         idParticipantChat = intent.getStringExtra("idParticipantChat");
-        Log.i("#####>>>>>", "onCreate: " + idParticipantChat);
 
         // Appel des clics sur les boutons
         btnSend();
@@ -200,7 +200,7 @@ public class MessageActivity extends AppCompatActivity {
 
         // Upload du message dans la table Chats
         ChatModel newChat = new ChatModel(sender, receiver, message, false);
-        long time= System.currentTimeMillis();
+        long time = System.currentTimeMillis();
         String docId = String.valueOf(time);
         chatCollectionRef.document(docId).set(newChat)
                 .addOnFailureListener(new OnFailureListener() {
@@ -211,66 +211,62 @@ public class MessageActivity extends AppCompatActivity {
                 });
 
         // Upload de la liaison des participants du chat en question dans Chatlist
-//        chatlistDocumentRef.set(idParticipantChat, idParticipantChat);
-        ChatlistModel newChatChannel = new ChatlistModel(idParticipantChat);
-        newChatChannel.setId(idParticipantChat);
-        chatListCollectionRef.document(currentUser.getUid()).set(idParticipantChat);
+        HashMap <String, Object> addUserToArrayMap = new HashMap<>();
+        addUserToArrayMap.put("id", FieldValue.arrayUnion(idParticipantChat));
 
-//        final DatabaseReference chatRef = FirebaseDatabase.getInstance().getReference("Chatlist")
-//                .child(firebaseUser.getUid())
-//                .child(userid);
-//        chatRef.addListenerForSingleValueEvent(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-//                if (!dataSnapshot.exists()) {
-//                    chatRef.child("id").setValue(userid);
-//                }
-//            }
-//
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError databaseError) {
-//
-//            }
-//        });
+
+        chatListCollectionRef
+                .document(currentUser.getUid())
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                        if (!task.getResult().exists()) {
+                            chatListCollectionRef.document(currentUser.getUid()).set(addUserToArrayMap);
+                        } else {
+                            chatListCollectionRef.document(currentUser.getUid()).update(addUserToArrayMap);
+                        }
+                    }
+                });
     }
 
-    // Affichage des messages
-    private void readMessages(final String myid, final String userid, final String imageurl) {
-        mchat = new ArrayList<>();
+// Affichage des messages
+private void readMessages(final String myid,final String userid,final String imageurl){
+        mchat=new ArrayList<>();
 
-        Query query = db.collection(NODE_CHATS);
-        query.addSnapshotListener(new EventListener<QuerySnapshot>() {
-            @Override
-            public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
-                mchat.clear();
-                for (QueryDocumentSnapshot documentSnapshot : value) {
-                    ChatModel chat = documentSnapshot.toObject(ChatModel.class);
-                    if (chat.getReceiver().equals(myid) && chat.getSender().equals(userid) ||
-                            chat.getReceiver().equals(userid) && chat.getSender().equals(myid)) {
-                        mchat.add(chat);
-                    }
-                    messageAdapter = new MessageAdapter(MessageActivity.this, mchat, imageurl);
-                    recyclerView.setAdapter(messageAdapter);
-                }
-            }
+        Query query=db.collection(NODE_CHATS);
+        query.addSnapshotListener(new EventListener<QuerySnapshot>(){
+@Override
+public void onEvent(@Nullable QuerySnapshot value,@Nullable FirebaseFirestoreException error){
+        mchat.clear();
+        for(QueryDocumentSnapshot documentSnapshot:value){
+        ChatModel chat=documentSnapshot.toObject(ChatModel.class);
+        if(chat.getReceiver().equals(myid)&&chat.getSender().equals(userid)||
+        chat.getReceiver().equals(userid)&&chat.getSender().equals(myid)){
+        mchat.add(chat);
+        }
+        messageAdapter=new MessageAdapter(MessageActivity.this,mchat,imageurl);
+        recyclerView.setAdapter(messageAdapter);
+        }
+        }
         });
 
-    }
+        }
 
-    // Gestion du statut de l'utilisateur
-    private void status(String status) {
-        userDocumentRef.update("status", status);
-    }
+// Gestion du statut de l'utilisateur
+private void status(String status){
+        userDocumentRef.update("status",status);
+        }
 
-    @Override
-    protected void onResume() {
+@Override
+protected void onResume(){
         super.onResume();
         status("Online");
-    }
+        }
 
-    @Override
-    protected void onStop() {
+@Override
+protected void onStop(){
         super.onStop();
         status("offline");
-    }
-}
+        }
+        }

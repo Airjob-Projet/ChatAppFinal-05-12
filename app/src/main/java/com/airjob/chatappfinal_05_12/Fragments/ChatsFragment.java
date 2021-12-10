@@ -1,15 +1,19 @@
 package com.airjob.chatappfinal_05_12.Fragments;
 
+import static com.airjob.chatappfinal_05_12.ConstantNode.NODE_CHATLIST;
+import static com.airjob.chatappfinal_05_12.ConstantNode.NODE_USERS;
+
 import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
+
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.airjob.chatappfinal_05_12.Adapter.UserAdapter;
 import com.airjob.chatappfinal_05_12.Model.ChatlistModel;
@@ -17,13 +21,14 @@ import com.airjob.chatappfinal_05_12.Model.UserModel;
 import com.airjob.chatappfinal_05_12.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,17 +38,16 @@ public class ChatsFragment extends Fragment {
     private RecyclerView recyclerView;
 
     private UserAdapter userAdapter;
-    private List<UserModel> mUsers;
 
-    FirebaseUser fuser;
-    DatabaseReference reference; // Avec RealTime
+    private List<UserModel> mUsers; // Liste avec les informations des utilisateurs connectés
+    private List<String> mUsersConnected; // Liste des utilisateurs avec lequels une session de chat est ouverte
+
+    private FirebaseUser currentUser;
 
     // Avec Firestore
-    FirebaseFirestore db;
-    private CollectionReference chatCollectionRef;
-
-
-    private List<ChatlistModel> usersList;
+    private FirebaseFirestore db;
+    private CollectionReference chatListCollectionRef;
+    private CollectionReference userCollectionReference;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -54,73 +58,62 @@ public class ChatsFragment extends Fragment {
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        fuser = FirebaseAuth.getInstance().getCurrentUser();
+        currentUser = FirebaseAuth.getInstance().getCurrentUser();
 
-        usersList = new ArrayList<>();
+        mUsers = new ArrayList<>();
+        mUsersConnected = new ArrayList<>();
 
-        // Récupération des données sur la base
-        // Avec RealTimeDatabase
-        reference = FirebaseDatabase.getInstance().getReference("Chatlist").child(fuser.getUid());
-        reference.addValueEventListener(new ValueEventListener() {
+
+        // Avec Firestore
+        // Init de Firestore
+        db = FirebaseFirestore.getInstance();
+        chatListCollectionRef = db.collection(NODE_CHATLIST);
+        userCollectionReference = db.collection(NODE_USERS);
+
+//         Création de la liste des utilisateurs avec lesquels une session de chat est ouverte
+        final DocumentReference chatListDocRef = chatListCollectionRef.document(currentUser.getUid());
+        chatListDocRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                usersList.clear();
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()){
-                    ChatlistModel chatlist = snapshot.getValue(ChatlistModel.class);
-                    usersList.add(chatlist);
+            public void onEvent(@Nullable DocumentSnapshot value, @Nullable FirebaseFirestoreException error) {
+                if (error != null) {
+                    Toast.makeText(getContext(), "Error : " + error, Toast.LENGTH_SHORT).show();
+                    return;
                 }
-
-                chatList();
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
+                if (value != null && value.exists()) {
+                    mUsersConnected.clear();
+                    ChatlistModel chatlist = value.toObject(ChatlistModel.class);
+                    for (int i = 0; i < chatlist.getId().size(); i++) {
+                        String user = chatlist.getId().get(i);
+                        mUsersConnected.add(user);
+                    }
+                    chatList();
+                }
             }
         });
-
-//        // Avec Firestore
-//        // Init de Firestore
-//        db = FirebaseFirestore.getInstance();
-//        chatCollectionRef = db.collection("Chatlist");
-//        chatCollectionRef
-//                .get()
-//                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-//                    @Override
-//                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-//                        if(task.isSuccessful()){
-//                            for (QueryDocumentSnapshot documentSnapshot : task.getResult()) {
-//                                usersList.add(documentSnapshot.toObject())
-//                            }
-//                        }
-//                    }
-//                });
-
         return view;
     }
 
     private void chatList() {
-        mUsers = new ArrayList<>();
-        reference = FirebaseDatabase.getInstance().getReference("Users");
-        reference.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                mUsers.clear();
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()){
-                    UserModel user = snapshot.getValue(UserModel.class);
-                    for (ChatlistModel chatlist : usersList){
-                        if (user.getId().equals(chatlist.getId())){
-                            mUsers.add(user);
+        userCollectionReference
+                .addSnapshotListener(new EventListener<QuerySnapshot>() {
+                    @Override
+                    public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
+                        if (error != null) {
+                            Toast.makeText(getContext(), "Error : " + error, Toast.LENGTH_SHORT).show();
+                            return;
                         }
+                        mUsers.clear();
+                        for (QueryDocumentSnapshot documentSnapshot : value) {
+                            UserModel user = documentSnapshot.toObject(UserModel.class);
+                            for (int i = 0; i < mUsersConnected.size(); i++) {
+                                if (user.getId().equals(mUsersConnected.get(i))) {
+                                    mUsers.add(user);
+                                }
+                            }
+                        }
+                        userAdapter = new UserAdapter(getContext(), mUsers, true);
+                        recyclerView.setAdapter(userAdapter);
                     }
-                }
-                userAdapter = new UserAdapter(getContext(), mUsers, true);
-                recyclerView.setAdapter(userAdapter);
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-            }
-        });
+                });
     }
 }

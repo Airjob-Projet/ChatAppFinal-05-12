@@ -100,31 +100,29 @@ public class UsersFragment extends Fragment {
                 .startAt(s)
                 .endAt(s + "\uf8ff");
 
-        query1
-                .addSnapshotListener(new EventListener<QuerySnapshot>() {
-                    @Override
-                    public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
-                        mUsers.clear();
+        query1.addSnapshotListener(new EventListener<QuerySnapshot>() {
+            @Override
+            public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
+                mUsers.clear();
 
-                        for (QueryDocumentSnapshot documentSnapshot : value) {
-                            UserModel user = documentSnapshot.toObject(UserModel.class);
+                for (QueryDocumentSnapshot documentSnapshot : value) {
+                    UserModel user = documentSnapshot.toObject(UserModel.class);
 
-                            assert user != null;
-                            assert firebaseUser != null;
-                            if (!user.getId().equals(firebaseUser.getUid())) {
-                                mUsers.add(user);
-                            }
-                        }
-                        userAdapter = new UserAdapter(getContext(), mUsers, false);
-                        recyclerView.setAdapter(userAdapter);
+                    assert user != null;
+                    assert firebaseUser != null;
+                    if (!user.getId().equals(firebaseUser.getUid())) {
+                        mUsers.add(user);
                     }
-                });
+                }
+                userAdapter = new UserAdapter(getContext(), mUsers, false);
+                recyclerView.setAdapter(userAdapter);
+            }
+        });
 
     }
 
     private void showUsers() {
-        db
-                .collection("Users")
+        db.collection("Users")
                 .addSnapshotListener(new EventListener<QuerySnapshot>() {
                     @Override
                     public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
